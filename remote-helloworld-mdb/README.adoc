@@ -1,0 +1,123 @@
+include::../shared-doc/attributes.adoc[]
+
+= remote-helloworld-mdb: Helloworld Using an MDB (Message-Driven Bean) and a Remote Artemis broker
+:author: Serge Pagop, Andy Taylor, Jeff Mesnil
+:level: Intermediate
+:technologies: JMS, EJB, MDB
+:openshift: true
+
+[abstract]
+The `remote-helloworld-mdb` quickstart uses JMS and EJB Message-Driven Bean (MDB) to create and deploy JMS topic and queue resources in {productName}.
+
+:standalone-server-type: full
+:archiveType: war
+
+== What is it?
+
+The `remote-helloworld-mdb` quickstart demonstrates the use of JMS and EJB Message-Driven Bean in {productNameFull} with a remote {BrokerProductName} broker.
+
+This project uses two JMS resources on a remote broker:
+
+* A queue named `HELLOWORLDMDBQueue` bound in JNDI as `java:/queue/HELLOWORLDMDBQueue`
+* A topic named `HELLOWORLDMDBTopic` bound in JNDI as `java:/topic/HELLOWORLDMDBTopic`
+
+//*************************************************
+// Product Release content only
+//*************************************************
+
+ifndef::EAPCDRelease[]
+
+// System Requirements
+include::../shared-doc/system-requirements.adoc[leveloffset=+1]
+// Use of {jbossHomeName}
+include::../shared-doc/use-of-jboss-home-name.adoc[leveloffset=+1]
+//Start the {BrokerProductName} broker.
+
+== Run the Application Locally
+
+=== Package the application
+
+The application is packaged and deployed on a provisioned server:
+
+[source,options="nowrap"]
+----
+$ mvn clean package -Pprovisioned-server
+----
+
+=== Running the {BrokerProductName} broker locally
+
+You can run {BrokerProductName} broker locally using docker or podman:
+[source,options="nowrap",subs="+attributes"]
+----
+podman run --rm --name artemis -e AMQ_USER=admin -e AMQ_PASSWORD=admin -p8161:8161 -p61616:61616 -v artemis-data:/home/jboss/data:Z -e AMQ_DATA_DIR=/home/jboss/data {BrokerImageName}
+----
+
+You can access the console of {BrokerProductName} at the URL: http://localhost:8161/console with *admin/admin* to authenticate.
+
+=== Run the Application
+
+With the broker running, we can start application:
+
+[source,options="nowrap"]
+----
+$ ./target/server/bin/standalone.sh
+----
+
+Look at the {productName} console or server log and you should see log messages corresponding to the deployment of the message-driven beans and the JMS destinations:
+
+[source,options="nowrap"]
+----
+...
+12:58:33,554 INFO  [org.wildfly.extension.messaging-activemq] (MSC service thread 1-4) WFLYMSGAMQ0002: Bound messaging object to jndi name java:/queue/HELLOWORLDMDBQueue
+12:58:33,554 INFO  [org.wildfly.extension.messaging-activemq] (MSC service thread 1-6) WFLYMSGAMQ0002: Bound messaging object to jndi name java:/topic/HELLOWORLDMDBTopic
+12:58:33,841 INFO  [org.wildfly.extension.messaging-activemq] (Thread-0 (ActiveMQ-client-global-threads)) Creating topic HelloWorldMDBTopic on node UP 093d38b0-b2c2-11ed-b195-0ec6278730b5 - TransportConfiguration(name=62b7e0dd-bcdf-11ed-9c3f-3ce1a1c35439, factory=org-apache-activemq-artemis-core-remoting-impl-netty-NettyConnectorFactory) ?host=localhost&useNioGlobalWorkerPool=true&port=61616&localAddress=127-0-0-1&useNio=true
+12:58:33,871 INFO  [org.jboss.as.ejb3] (MSC service thread 1-1) WFLYEJB0042: Started message driven bean 'HelloWorldQueueMDB' with 'activemq-ra.rar' resource adapter
+12:58:33,876 INFO  [org.jboss.as.ejb3] (MSC service thread 1-7) WFLYEJB0042: Started message driven bean 'HelloWorldQTopicMDB' with 'activemq-ra.rar' resource adapter
+12:58:34,079 INFO  [org.wildfly.extension.messaging-activemq] (MSC service thread 1-2) Creating queue HelloWorldMDBQueue returned ActiveMQMessage[null]:NON-PERSISTENT/ClientMessageImpl[messageID=1482, durable=false, address=jms.tempqueue.ab4472cb-2ae3-4de2-9d4b-26056e1c6373,userID=null,properties=TypedProperties[_AMQ_OperationSucceeded=false,JMSReplyTo=jms.tempqueue.ab4472cb-2ae3-4de2-9d4b-26056e1c6373,JMSCorrelationID=62d8d66a-bcdf-11ed-9c3f-3ce1a1c35439,_AMQ_ROUTING_TYPE=1]]
+12:58:34,074 INFO  [org.wildfly.extension.messaging-activemq] (Thread-0 (ActiveMQ-client-global-threads)) Creating topic HelloWorldMDBTopic returned ActiveMQMessage[null]:NON-PERSISTENT/ClientMessageImpl[messageID=1484, durable=false, address=21aae569-f76e-4a20-af43-fe8d2d968d20,userID=null,properties=TypedProperties[_AMQ_OperationSucceeded=false,JMSReplyTo=temp-queue://21aae569-f76e-4a20-af43-fe8d2d968d20,JMSCorrelationID=62d9248b-bcdf-11ed-9c3f-3ce1a1c35439,_AMQ_ROUTING_TYPE=1]]
+12:58:34,169 INFO  [org.wildfly.extension.messaging-activemq] (MSC service thread 1-2) Queue HelloWorldMDBQueue has been created
+12:58:34,205 INFO  [org.wildfly.extension.messaging-activemq] (Thread-0 (ActiveMQ-client-global-threads)) Topic HelloWorldMDBTopic has been created
+12:58:34,243 INFO  [org.wildfly.extension.messaging-activemq] (Thread-0 (ActiveMQ-client-global-threads)) Creating queue HelloWorldMDBQueue on node UP 093d38b0-b2c2-11ed-b195-0ec6278730b5 - TransportConfiguration(name=62b7e0dd-bcdf-11ed-9c3f-3ce1a1c35439, factory=org-apache-activemq-artemis-core-remoting-impl-netty-NettyConnectorFactory) ?host=localhost&useNioGlobalWorkerPool=true&port=61616&localAddress=127-0-0-1&useNio=true
+...
+12:58:34,282 INFO  [org.wildfly.extension.messaging-activemq] (Thread-0 (ActiveMQ-client-global-threads)) Creating queue HelloWorldMDBQueue returned ActiveMQMessage[null]:NON-PERSISTENT/ClientMessageImpl[messageID=1522, durable=false, address=809e683f-00c4-4d28-ad3f-62eaa6c617e6,userID=null,properties=TypedProperties[_AMQ_OperationSucceeded=false,JMSReplyTo=temp-queue://809e683f-00c4-4d28-ad3f-62eaa6c617e6,JMSCorrelationID=62fb79a2-bcdf-11ed-9c3f-3ce1a1c35439,_AMQ_ROUTING_TYPE=1]]
+12:58:34,296 INFO  [org.wildfly.extension.messaging-activemq] (Thread-0 (ActiveMQ-client-global-threads)) Queue HelloWorldMDBQueue has been created
+12:58:35,432 INFO  [org.wildfly.extension.undertow] (ServerService Thread Pool -- 69) WFLYUT0021: Registered web context: '/' for server 'default-server'
+12:58:35,562 INFO  [org.jboss.as.server] (Controller Boot Thread) WFLYSRV0010: Deployed "remote-helloworld-mdb.war" (runtime-name : "ROOT.war")
+...
+----
+
+The application is running, and we can connect to it
+
+== Access the Application
+
+The application will be running at the following URL: http://localhost:8080/{artifactId}/ and will send some messages to the queue.
+
+To send messages to the topic, use the following URL: http://localhost:8080/{artifactId}/HelloWorldMDBServletClient?topic
+
+== Investigate the Server Console Output
+
+Look at the {productName} console or Server log and you should see log messages like the following:
+
+[source,options="nowrap"]
+----
+INFO  [class org.jboss.as.quickstarts.mdb.HelloWorldQueueMDB] (Thread-9 (ActiveMQ-client-global-threads-1189700957)) Received Message from queue: This is message 5
+INFO  [class org.jboss.as.quickstarts.mdb.HelloWorldQueueMDB] (Thread-6 (ActiveMQ-client-global-threads-1189700957)) Received Message from queue: This is message 1
+INFO  [class org.jboss.as.quickstarts.mdb.HelloWorldQueueMDB] (Thread-7 (ActiveMQ-client-global-threads-1189700957)) Received Message from queue: This is message 4
+INFO  [class org.jboss.as.quickstarts.mdb.HelloWorldQueueMDB] (Thread-5 (ActiveMQ-client-global-threads-1189700957)) Received Message from queue: This is message 2
+INFO  [class org.jboss.as.quickstarts.mdb.HelloWorldQueueMDB] (Thread-4 (ActiveMQ-client-global-threads-1189700957)) Received Message from queue: This is message 3
+----
+
+== Run the Quickstart on OpenShift
+// Getting Started with Helm
+include::../shared-doc/helm-getting-started-overview.adoc[leveloffset=+2]
+
+=== Deploy a {BrokerProductName} instance on OpenShift
+
+[source,options="nowrap",subs="+attributes"]
+----
+$ oc run artemis --env AMQ_USER=admin --env AMQ_PASSWORD=admin --image={BrokerImageName}  --port=61616 --expose=true
+----
+
+This will create a broker instance named `artemis` on OpenShift that can be accessed on the port `61616` on the service `artemis` with the account *admin/admin*.
+//Prepare Helm for Quickstart Deployment
+include::../shared-doc/helm-deploy-project.adoc[leveloffset=+3]

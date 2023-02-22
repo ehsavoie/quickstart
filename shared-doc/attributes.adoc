@@ -192,3 +192,7 @@ endif::[]
 :JBDSInstallBookName: Installation Guide
 :LinkJBDSGettingStarted: https://access.redhat.com/documentation/en-us/red_hat_codeready_studio/{JBDSVersion}/html-single/getting_started_with_codeready_studio_tools/
 :JBDSGettingStartedBookName: Getting Started with CodeReady Studio Tools
+
+:BrokerProductName: Apache Artemis
+:BrokerImageName: quay.io/artemiscloud/activemq-artemis-broker-kubernetes
+//:BrokerImageName:registry.redhat.io/amq7/amq-broker-rhel8:7.10
