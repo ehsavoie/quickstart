@@ -57,17 +57,8 @@ import jakarta.servlet.http.HttpServletResponse;
 )
 
 /**
- * <p>
- * A simple servlet 3 as client that sends several messages to a queue or a topic.
- * </p>
- *
- * <p>
- * The servlet is registered and mapped to /HelloWorldMDBServletClient using the {@linkplain WebServlet
- * @HttpServlet}.
- * </p>
- *
- * @author Serge Pagop (spagop@redhat.com)
- *
+ * A simple servlet as client that sends several messages to a queue or a topic.
+ * @author Emmanuel Hugonnet (c) 2023 Red Hat, Inc.
  */
 @WebServlet("/HelloWorldMDBServletClient")
 public class HelloWorldMDBServletClient extends HttpServlet {
@@ -77,38 +68,34 @@ public class HelloWorldMDBServletClient extends HttpServlet {
     private static final int MSG_COUNT = 5;
 
     @Inject
-    private JMSContext context;
+    private transient JMSContext context;
 
     @Resource(lookup = "java:/queue/HELLOWORLDMDBQueue")
-    private Queue queue;
+    private transient Queue queue;
 
     @Resource(lookup = "java:/topic/HELLOWORLDMDBTopic")
-    private Topic topic;
+    private transient Topic topic;
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setContentType("text/html");
-        PrintWriter out = resp.getWriter();
-        out.write("<h1>Quickstart: Example demonstrates the use of <strong>JMS 2.0</strong> and <strong>EJB 3.2 Message-Driven Bean</strong> in JBoss EAP.</h1>");
-        try {
+        try (PrintWriter out = resp.getWriter()) {
+            out.println("<h1>Quickstart: Example demonstrates the use of <strong>Jakarta Messaging 3.1</strong> and <strong>Jakarta Enterprise Beans 4.0 Message-Driven Bean</strong> in JBoss EAP.</h1>");
             boolean useTopic = req.getParameterMap().keySet().contains("topic");
             final Destination destination = useTopic ? topic : queue;
 
-            out.write("<p>Sending messages to <em>" + destination + "</em></p>");
-            out.write("<h2>The following messages will be sent to the destination:</h2>");
+            out.println("<p>Sending messages to <em>" + destination + "</em></p>");
+            out.println("<h2>The following messages will be sent to the destination:</h2>");
             for (int i = 0; i < MSG_COUNT; i++) {
                 String text = "This is message " + (i + 1);
                 context.createProducer().send(destination, text);
-                out.write("Message (" + i + "): " + text + "</br>");
+                out.println("Message (" + i + "): " + text + "<br/>");
             }
-            out.write("<p><i>Go to your JBoss EAP server console or server log to see the result of messages processing.</i></p>");
-        } finally {
-            if (out != null) {
-                out.close();
-            }
+            out.println("<p><i>Go to your JBoss EAP server console or server log to see the result of messages processing.</i></p>");
         }
     }
 
+    @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         doGet(req, resp);
     }
