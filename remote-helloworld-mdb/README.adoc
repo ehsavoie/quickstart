@@ -47,9 +47,13 @@ $ mvn clean package -Pprovisioned-server
 === Running the {BrokerProductName} broker locally
 
 You can run {BrokerProductName} broker locally using docker or podman:
+ - first you need to create a volume called *artemis-data* 
+ - second, start the image.
+
 [source,options="nowrap",subs="+attributes"]
 ----
-podman run --rm --name artemis -e AMQ_USER=admin -e AMQ_PASSWORD=admin -p8161:8161 -p61616:61616 -v artemis-data:/home/jboss/data:Z -e AMQ_DATA_DIR=/home/jboss/data {BrokerImageName}
+$ podman volume create artemis-data
+$ podman run --rm --name artemis -e AMQ_USER=admin -e AMQ_PASSWORD=admin -p8161:8161 -p61616:61616 -v artemis-data:/home/jboss/data:Z -e AMQ_DATA_DIR=/home/jboss/data {BrokerImageName}
 ----
 
 You can access the console of {BrokerProductName} at the URL: http://localhost:8161/console with *admin/admin* to authenticate.
