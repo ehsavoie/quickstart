@@ -33,7 +33,7 @@ public class ProvisionedManagedMDBServletIT extends AbstractMDBServletIT {
     protected URI getHTTPEndpoint() {
         String host = getServerHost();
         if (host == null) {
-            host = "http://localhost:8080/remote-helloworld-mdb";
+            host = "http://localhost:8080";
         }
         try {
             return new URI(host + "/HelloWorldMDBServletClient");

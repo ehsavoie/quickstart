@@ -11,6 +11,7 @@ The `remote-helloworld-mdb` quickstart uses JMS and EJB Message-Driven Bean (MDB
 
 :standalone-server-type: full
 :archiveType: war
+:restoreScriptName: remove-remote-broker.cli
 
 == What is it?
 
@@ -33,16 +34,56 @@ include::../shared-doc/system-requirements.adoc[leveloffset=+1]
 include::../shared-doc/use-of-jboss-home-name.adoc[leveloffset=+1]
 //Start the {BrokerProductName} broker.
 
-== Run the Application Locally
+// build and run with standard server distribution
+[[build_and_run_the_quickstart_with_server_dist]]
+== Building and running the quickstart application with a {productName} server distribution
 
-=== Package the application
+[[configure_the_server]]
+== Configure the Server
 
-The application is packaged and deployed on a provisioned server:
+You configure the JMS connection factory to the remote broker by running JBoss CLI commands. For your convenience, this quickstart batches the commands into a `configure-remote-broker.cli` script provided in the root directory of this quickstart.
 
+. Before you begin, make sure you do the following:
+
+* xref:back_up_standalone_server_configuration[Back up the {productName} standalone server configuration] as described above.
+* xref:start_the_eap_standalone_server[Start the {productName} server with the standalone full profile] as described above.
+
+. Review the `configure-remote-broker.cli` file in the root of this quickstart directory. This script adds the `test` queue to the `messaging` subsystem in the server configuration file.
+. Open a new terminal, navigate to the root directory of this quickstart, and run the following command, replacing __{jbossHomeName}__ with the path to your server:
++
+[source,subs="+quotes,attributes+",options="nowrap"]
+----
+$ __{jbossHomeName}__/bin/jboss-cli.sh --connect --file=configure-remote-broker.cli
+----
++
+NOTE: For Windows, use the `__{jbossHomeName}__\bin\jboss-cli.bat` script.
+
+. You should see the following result when you run the script:
++
 [source,options="nowrap"]
 ----
-$ mvn clean package -Pprovisioned-server
+The batch executed successfully
 ----
+
+. Stop the {productName} server.
+
+== Review the Modified Server Configuration
+
+After stopping the server, open the `__{jbossHomeName}__/standalone/configuration/standalone-full.xml` file and review the changes.
+
+The following `testQueue` jms-queue was configured in the configuration of the `messaging-activemq` subsystem.
+
+[source,xml,options="nowrap"]
+----
+<remote-connector name="artemis" socket-binding="remote-artemis"/>
+<pooled-connection-factory name="RemoteConnectionFactory" entries="java:jboss/RemoteConnectionFactory java:jboss/exported/jms/RemoteConnectionFactory" connectors="artemis" user="admin" password="admin" enable-amq1-prefix="false"/>
+----
+
+
+// Start the {productName} Standalone Server
+include::../shared-doc/start-the-standalone-server.adoc[leveloffset=+2]
+// Build and Deploy the Quickstart
+include::../shared-doc/build-and-deploy-the-quickstart.adoc[leveloffset=+2]
 
 === Running the {BrokerProductName} broker locally
 
@@ -58,62 +99,47 @@ $ podman run --rm --name artemis -e AMQ_USER=admin -e AMQ_PASSWORD=admin -p8161:
 
 You can access the console of {BrokerProductName} at the URL: http://localhost:8161/console with *admin/admin* to authenticate.
 
-=== Run the Application
+=== Access the Application
 
-With the broker running, we can start application:
+The application will be running at the following URL: http://localhost:8080/{artifactId}/.
 
-[source,options="nowrap"]
-----
-$ ./target/server/bin/standalone.sh
-----
-
-Look at the {productName} console or server log and you should see log messages corresponding to the deployment of the message-driven beans and the JMS destinations:
-
-[source,options="nowrap"]
-----
-...
-12:58:33,554 INFO  [org.wildfly.extension.messaging-activemq] (MSC service thread 1-4) WFLYMSGAMQ0002: Bound messaging object to jndi name java:/queue/HELLOWORLDMDBQueue
-12:58:33,554 INFO  [org.wildfly.extension.messaging-activemq] (MSC service thread 1-6) WFLYMSGAMQ0002: Bound messaging object to jndi name java:/topic/HELLOWORLDMDBTopic
-12:58:33,841 INFO  [org.wildfly.extension.messaging-activemq] (Thread-0 (ActiveMQ-client-global-threads)) Creating topic HelloWorldMDBTopic on node UP 093d38b0-b2c2-11ed-b195-0ec6278730b5 - TransportConfiguration(name=62b7e0dd-bcdf-11ed-9c3f-3ce1a1c35439, factory=org-apache-activemq-artemis-core-remoting-impl-netty-NettyConnectorFactory) ?host=localhost&useNioGlobalWorkerPool=true&port=61616&localAddress=127-0-0-1&useNio=true
-12:58:33,871 INFO  [org.jboss.as.ejb3] (MSC service thread 1-1) WFLYEJB0042: Started message driven bean 'HelloWorldQueueMDB' with 'activemq-ra.rar' resource adapter
-12:58:33,876 INFO  [org.jboss.as.ejb3] (MSC service thread 1-7) WFLYEJB0042: Started message driven bean 'HelloWorldQTopicMDB' with 'activemq-ra.rar' resource adapter
-12:58:34,079 INFO  [org.wildfly.extension.messaging-activemq] (MSC service thread 1-2) Creating queue HelloWorldMDBQueue returned ActiveMQMessage[null]:NON-PERSISTENT/ClientMessageImpl[messageID=1482, durable=false, address=jms.tempqueue.ab4472cb-2ae3-4de2-9d4b-26056e1c6373,userID=null,properties=TypedProperties[_AMQ_OperationSucceeded=false,JMSReplyTo=jms.tempqueue.ab4472cb-2ae3-4de2-9d4b-26056e1c6373,JMSCorrelationID=62d8d66a-bcdf-11ed-9c3f-3ce1a1c35439,_AMQ_ROUTING_TYPE=1]]
-12:58:34,074 INFO  [org.wildfly.extension.messaging-activemq] (Thread-0 (ActiveMQ-client-global-threads)) Creating topic HelloWorldMDBTopic returned ActiveMQMessage[null]:NON-PERSISTENT/ClientMessageImpl[messageID=1484, durable=false, address=21aae569-f76e-4a20-af43-fe8d2d968d20,userID=null,properties=TypedProperties[_AMQ_OperationSucceeded=false,JMSReplyTo=temp-queue://21aae569-f76e-4a20-af43-fe8d2d968d20,JMSCorrelationID=62d9248b-bcdf-11ed-9c3f-3ce1a1c35439,_AMQ_ROUTING_TYPE=1]]
-12:58:34,169 INFO  [org.wildfly.extension.messaging-activemq] (MSC service thread 1-2) Queue HelloWorldMDBQueue has been created
-12:58:34,205 INFO  [org.wildfly.extension.messaging-activemq] (Thread-0 (ActiveMQ-client-global-threads)) Topic HelloWorldMDBTopic has been created
-12:58:34,243 INFO  [org.wildfly.extension.messaging-activemq] (Thread-0 (ActiveMQ-client-global-threads)) Creating queue HelloWorldMDBQueue on node UP 093d38b0-b2c2-11ed-b195-0ec6278730b5 - TransportConfiguration(name=62b7e0dd-bcdf-11ed-9c3f-3ce1a1c35439, factory=org-apache-activemq-artemis-core-remoting-impl-netty-NettyConnectorFactory) ?host=localhost&useNioGlobalWorkerPool=true&port=61616&localAddress=127-0-0-1&useNio=true
-...
-12:58:34,282 INFO  [org.wildfly.extension.messaging-activemq] (Thread-0 (ActiveMQ-client-global-threads)) Creating queue HelloWorldMDBQueue returned ActiveMQMessage[null]:NON-PERSISTENT/ClientMessageImpl[messageID=1522, durable=false, address=809e683f-00c4-4d28-ad3f-62eaa6c617e6,userID=null,properties=TypedProperties[_AMQ_OperationSucceeded=false,JMSReplyTo=temp-queue://809e683f-00c4-4d28-ad3f-62eaa6c617e6,JMSCorrelationID=62fb79a2-bcdf-11ed-9c3f-3ce1a1c35439,_AMQ_ROUTING_TYPE=1]]
-12:58:34,296 INFO  [org.wildfly.extension.messaging-activemq] (Thread-0 (ActiveMQ-client-global-threads)) Queue HelloWorldMDBQueue has been created
-12:58:35,432 INFO  [org.wildfly.extension.undertow] (ServerService Thread Pool -- 69) WFLYUT0021: Registered web context: '/' for server 'default-server'
-12:58:35,562 INFO  [org.jboss.as.server] (Controller Boot Thread) WFLYSRV0010: Deployed "remote-helloworld-mdb.war" (runtime-name : "ROOT.war")
-...
-----
-
-The application is running, and we can connect to it
-
-== Access the Application
-
-The application will be running at the following URL: http://localhost:8080/{artifactId}/ and will send some messages to the queue.
-
-To send messages to the topic, use the following URL: http://localhost:8080/{artifactId}/HelloWorldMDBServletClient?topic
-
-== Investigate the Server Console Output
+=== Investigate the Server Console Output
 
 Look at the {productName} console or Server log and you should see log messages like the following:
 
 [source,options="nowrap"]
 ----
-INFO  [class org.jboss.as.quickstarts.mdb.HelloWorldQueueMDB] (Thread-9 (ActiveMQ-client-global-threads-1189700957)) Received Message from queue: This is message 5
-INFO  [class org.jboss.as.quickstarts.mdb.HelloWorldQueueMDB] (Thread-6 (ActiveMQ-client-global-threads-1189700957)) Received Message from queue: This is message 1
-INFO  [class org.jboss.as.quickstarts.mdb.HelloWorldQueueMDB] (Thread-7 (ActiveMQ-client-global-threads-1189700957)) Received Message from queue: This is message 4
-INFO  [class org.jboss.as.quickstarts.mdb.HelloWorldQueueMDB] (Thread-5 (ActiveMQ-client-global-threads-1189700957)) Received Message from queue: This is message 2
-INFO  [class org.jboss.as.quickstarts.mdb.HelloWorldQueueMDB] (Thread-4 (ActiveMQ-client-global-threads-1189700957)) Received Message from queue: This is message 3
+INFO  [class org.jboss.as.quickstarts.mdb.HelloWorldQueueMDB] (Thread-9 (ActiveMQ-client-global-threads-1189700957)) Received Message from queue: This is message 1
+INFO  [class org.jboss.as.quickstarts.mdb.HelloWorldQueueMDB] (Thread-6 (ActiveMQ-client-global-threads-1189700957)) Received Message from queue: This is message 2
+INFO  [class org.jboss.as.quickstarts.mdb.HelloWorldQueueMDB] (Thread-7 (ActiveMQ-client-global-threads-1189700957)) Received Message from queue: This is message 3
+INFO  [class org.jboss.as.quickstarts.mdb.HelloWorldQueueMDB] (Thread-5 (ActiveMQ-client-global-threads-1189700957)) Received Message from queue: This is message 4
+INFO  [class org.jboss.as.quickstarts.mdb.HelloWorldQueueMDB] (Thread-4 (ActiveMQ-client-global-threads-1189700957)) Received Message from queue: This is message 5
 ----
 
-== Run the Quickstart on OpenShift
-// Getting Started with Helm
-include::../shared-doc/helm-getting-started-overview.adoc[leveloffset=+2]
+// Testing with Arquillian
+include::../shared-doc/run-arquillian-integration-tests-with-server-distribution.adoc[leveloffset=+2]
+// Undeploy the Quickstart
+include::../shared-doc/undeploy-the-quickstart.adoc[leveloffset=+2]
+// Restore the {productName} Standalone Server Configuration
+include::../shared-doc/restore-standalone-server-configuration.adoc[leveloffset=+2]
+
+// Additional information about this script
+This script removes the remote broker connection from the `messaging` subsystem and restore the `default` internal broker. You should see the following result when you run the script.
+
+[source,options="nowrap"]
+----
+The batch executed successfully
+----
+
+// Restore the {productName} Standalone Server Configuration Manually
+include::../shared-doc/restore-standalone-server-configuration-manual.adoc[leveloffset=+3]
+
+// Build and run sections for other environments/builds
+ifndef::ProductRelease,EAPXPRelease[]
+include::../shared-doc/build-and-run-the-quickstart-with-provisioned-server.adoc[leveloffset=+1]
+endif::[]
+
+== Building and running the quickstart application with OpenShift
 
 === Deploy a {BrokerProductName} instance on OpenShift
 
@@ -124,4 +150,10 @@ $ oc run artemis --env AMQ_USER=admin --env AMQ_PASSWORD=admin --image={BrokerIm
 
 This will create a broker instance named `artemis` on OpenShift that can be accessed on the port `61616` on the service `artemis` with the account *admin/admin*.
 //Prepare Helm for Quickstart Deployment
-include::../shared-doc/helm-deploy-project.adoc[leveloffset=+3]
+
+// Getting Started with Helm
+include::../shared-doc/helm-getting-started-overview.adoc[leveloffset=+2]
+//Prepare Helm for Quickstart Deployment
+include::../shared-doc/helm-deploy-project.adoc[leveloffset=+2]
+// Testing on Openshift
+include::../shared-doc/run-arquillian-integration-tests-with-openshift.adoc[leveloffset=+2]

@@ -176,12 +176,6 @@
             <artifactId>wildfly-arquillian-common</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.wildfly.arquillian</groupId>
-            <artifactId>wildfly-arquillian-container-managed</artifactId>
-            <scope>test</scope>
-        </dependency>
-
     </dependencies>
 
     <profiles>
@@ -212,6 +206,7 @@
                                 <layer>ejb</layer>
                                 <layer>remote-activemq</layer>
                             </layers>
+                            <runtimeName>ROOT.war</runtimeName>
                         </configuration>
                         <executions>
                             <execution>

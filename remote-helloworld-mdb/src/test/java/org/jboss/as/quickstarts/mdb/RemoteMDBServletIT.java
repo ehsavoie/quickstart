@@ -16,10 +16,9 @@
 package org.jboss.as.quickstarts.mdb;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import org.jboss.arquillian.container.test.api.RunAsClient;
 import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.as.arquillian.api.ContainerResource;
-import org.jboss.as.arquillian.container.ManagementClient;
 import org.junit.runner.RunWith;
 
 /**
@@ -30,11 +29,21 @@ import org.junit.runner.RunWith;
 @RunAsClient
 public class RemoteMDBServletIT extends AbstractMDBServletIT {
 
-    @ContainerResource
-    private ManagementClient managementClient;
+
+    private String getServerHost() {
+        String host = System.getenv("SERVER_HOST");
+        if (host == null) {
+            host = System.getProperty("server.host", "http://localhost:8080/remote-helloworld-mdb");
+        }
+        return host;
+    }
 
     @Override
     protected URI getHTTPEndpoint() {
-        return managementClient.getWebUri().resolve("/HelloWorldMDBServletClient");
+        try {
+            return new URI(getServerHost() + "/HelloWorldMDBServletClient");
+        } catch (URISyntaxException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 }
