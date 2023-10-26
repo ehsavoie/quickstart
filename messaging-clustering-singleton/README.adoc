@@ -187,6 +187,31 @@ $ __{jbossHomeName}_2__/bin/standalone.sh -c standalone-full-ha.xml -Djboss.sock
 
 NOTE: For Windows, use the `__{jbossHomeName}_1__\bin\standalone.bat` and `__{jbossHomeName}_2__\bin\standalone.bat` scripts.
 
+==== Configure the Standalone Server with provisioned-server profile
+
+[source,options="nowrap"]
+---- 
+mvn clean install -Pprovisioned-server
+----
+
+==== Start the {productName} Standalone Servers with the Full HA Profile
+
+Use the following commands to start the standalone servers with the full HA profile.
+
+[source,subs="+quotes,attributes+",options="nowrap"]
+----
+mvn wildfly:start -Djboss-as.home=target/server2 -Dwildfly.javaOpts="-Djboss.socket.binding.port-offset=100"
+mvn wildfly:start -Djboss-as.home=target/server
+----
+
+To shudown those servers:
+
+[source,subs="+quotes,attributes+",options="nowrap"]
+----
+mvn wildfly:shutdown -Dwildfly.port=10090
+mvn wildfly:shutdown
+----
+
 == Access the Application
 
 === Access the Application Running in a Managed Domain
